@@ -16,12 +16,14 @@
     --vowel-color: #4a4357;
   }
   body.day {
-    --bg-color: #e7e6f7;
-    --text-color: #4a3b5b;
-    --accent-color: #827081;
-    --hover-color: #aea3b0;
-    --letter-bg: #e3d0d8;
-    --vowel-color: #c4b9d6;
+    --bg-color: #D9CCC5;
+    --text-color: #3D3D5F;
+    --accent-color: #9A8C98;
+    --hover-color: #b5a9b3;
+    --letter-bg: #C9ADA7;
+    --vowel-color: #C1A19C;
+    --correct-color: #7cb56e;
+    --wrong-color: #d45b5b;
   }
   body {
     background-color: var(--bg-color);
@@ -59,13 +61,15 @@
   }
   .word-note {
     font-size: 0.9rem;
-    color: var(--hover-color);
+    color: var(--text-color);
+    opacity: 0.8;
     text-align: center;
     margin-bottom: 5px;
   }
   .word-hint {
     font-size: 0.9rem;
-    color: var(--hover-color);
+    color: var(--text-color);
+    opacity: 0.8;
     text-align: center;
     margin-top: 5px;
     font-style: italic;
@@ -162,6 +166,7 @@
     right: 10px;
     font-size: 1.8rem;
     cursor: pointer;
+    color: var(--text-color);
   }
 
   @media (min-width: 600px) {
@@ -265,7 +270,12 @@ const wordsWithStress = [
 ];
 
 const vowels = new Set(['а', 'е', 'є', 'и', 'і', 'ї', 'о', 'у', 'ю', 'я']);
-const doubleStressWords = new Set(["пОмИлка", "помІщик"]);
+const doubleStressWords = new Set([
+  "пОмИлка",
+  "мАбУть",
+  "веснЯнИй",
+  "алфАвІт"
+]);
 
 // Load saved progress
 let savedData = JSON.parse(localStorage.getItem('accentGameData')) || {};
@@ -465,6 +475,5 @@ if (savedData.theme === 'day') {
 
 chooseWord();
 </script>
-
 </body>
 </html>
