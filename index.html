@@ -127,20 +127,6 @@
   .btn:hover {
     background-color: var(--hover-color);
   }
-  .fire {
-    font-size: 2.5rem;
-    position: absolute;
-    top: 10%;
-    opacity: 0;
-    animation: pop-fade 1.5s forwards;
-    pointer-events: none;
-    z-index: 10;
-  }
-  @keyframes pop-fade {
-    0% {opacity: 1; transform: scale(1.5);}
-    50% {opacity: 1; transform: scale(1);}
-    100% {opacity: 0; transform: scale(0.5);}
-  }
   .modal {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -193,7 +179,6 @@
       font-size: 1rem;
       max-width: 150px;
     }
-    .fire { font-size: 3rem; }
   }
 </style>
 </head>
@@ -218,8 +203,6 @@
   <button class="btn" id="restart">Почати заново</button>
   <button class="btn" id="next" style="display:none;">Наступне слово</button>
 </div>
-
-<div id="fire" class="fire">🔥</div>
 
 <div class="modal" id="statsModal">
   <div class="modal-content">
@@ -296,10 +279,8 @@ let totalCorrect = savedData.totalCorrect || 0;
 let totalMistakes = savedData.totalMistakes || 0;
 let currentWord = '';
 let stressedIndices = [];
-let hasShownFire = false;
 let selectedCount = 0;
 let requiredSelections = 1;
-let lastRecord = savedData.lastRecord || 0;
 
 function saveProgress() {
   const gameData = {
@@ -309,7 +290,6 @@ function saveProgress() {
     mistakes,
     totalCorrect,
     totalMistakes,
-    lastRecord,
     theme: document.body.classList.contains('day') ? 'day' : 'night'
   };
   localStorage.setItem('accentGameData', JSON.stringify(gameData));
@@ -396,13 +376,7 @@ function handleChoice(index, span) {
       streak++;
       totalCorrect++;
       
-      // Show fire only when breaking the previous record
-      if (streak > bestStreak && streak > lastRecord && !hasShownFire) {
-        bestStreak = streak;
-        lastRecord = bestStreak;
-        showFire();
-        hasShownFire = true;
-      } else if (streak > bestStreak) {
+      if (streak > bestStreak) {
         bestStreak = streak;
       }
     }
@@ -418,7 +392,6 @@ function handleChoice(index, span) {
     mistakes++;
     totalMistakes++;
     mistakeWords[currentWord] = (mistakeWords[currentWord] || 0) + 1;
-    hasShownFire = false;
   }
 
   updateInfo();
@@ -444,19 +417,11 @@ function updateInfo() {
 function restartGame() {
   streak = 0;
   mistakes = 0;
-  hasShownFire = false;
   availableWords = [...wordsWithStress];
   usedWords = [];
   updateInfo();
   saveProgress();
   chooseWord();
-}
-
-function showFire() {
-  const fire = document.getElementById('fire');
-  fire.style.animation = 'none';
-  void fire.offsetHeight; // Trigger reflow
-  fire.style.animation = 'pop-fade 1.5s forwards';
 }
 
 function openStats() {
@@ -485,10 +450,7 @@ function toggleTheme() {
 }
 
 document.getElementById('themeToggle').onclick = toggleTheme;
-document.getElementById('next').onclick = () => {
-  hasShownFire = false;
-  chooseWord();
-};
+document.getElementById('next').onclick = chooseWord;
 document.getElementById('restart').onclick = restartGame;
 document.getElementById('stats').onclick = openStats;
 
