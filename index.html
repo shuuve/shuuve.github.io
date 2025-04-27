@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест на наголоси</title>
+<style>
+  :root {
+    --bg-color: #2e2b3a;
+    --text-color: #d7cde4;
+    --accent-color: #827081;
+    --correct-color: #8BC34A;
+    --wrong-color: #F44336;
+    --hover-color: #aea3b0;
+    --letter-bg: #3e3a50;
+    --vowel-color: #4a4357;
+  }
+  body.day {
+    --bg-color: #D9CCC5;
+    --text-color: #3D3D5F;
+    --accent-color: #9A8C98;
+    --hover-color: #b5a9b3;
+    --letter-bg: #C9ADA7;
+    --vowel-color: #C1A19C;
+    --correct-color: #7cb56e;
+    --wrong-color: #d45b5b;
+  }
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    transition: background-color 0.5s, color 0.5s;
+    overflow: hidden;
+    padding: 20px;
+  }
+  .word-container {
+    position: relative;
+    height: 100px;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 15px;
+  }
+  .word {
+    font-size: 2rem;
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out, opacity 0.3s ease;
+  }
+  .word.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .word-note {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+  .word-hint {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    text-align: center;
+    margin-top: 5px;
+    font-style: italic;
+  }
+  .letter {
+    padding: 8px;
+    margin: 3px;
+    border-radius: 10px;
+    background-color: var(--letter-bg);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    font-size: 1.5rem;
+  }
+  .letter.vowel {
+    background-color: var(--vowel-color);
+  }
+  .letter:hover {
+    background-color: var(--hover-color);
+    transform: scale(1.1);
+  }
+  .letter.correct {
+    background-color: var(--correct-color);
+    color: white;
+  }
+  .letter.wrong {
+    background-color: var(--wrong-color);
+    color: white;
+  }
+  .letter.non-vowel {
+    cursor: default;
+    opacity: 0.9;
+  }
+  .info {
+    margin-top: 15px;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .buttons {
+    margin-top: 15px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .btn {
+    padding: 8px 16px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex: 1;
+    max-width: 140px;
+  }
+  .btn:hover {
+    background-color: var(--hover-color);
+  }
+  .modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+  }
+  .modal.show {
+    display: flex;
+    opacity: 1;
+  }
+  .modal-content {
+    background: var(--letter-bg);
+    padding: 20px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 400px;
+    color: var(--text-color);
+    text-align: center;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+  }
+  .modal.show .modal-content {
+    transform: translateY(0);
+  }
+  .theme-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--text-color);
+  }
+
+  @media (min-width: 600px) {
+    .word-container { height: 120px; }
+    .word { font-size: 3rem; }
+    .letter { 
+      font-size: 2rem;
+      padding: 10px;
+      margin: 5px;
+    }
+    .word-note, .word-hint { font-size: 1rem; }
+    .info { font-size: 1.2rem; }
+    .btn {
+      padding: 10px 20px;
+      font-size: 1rem;
+      max-width: 150px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle" id="themeToggle">🌙</div>
+
+<div class="word-container">
+  <div class="word-note" id="wordNote"></div>
+  <div class="word" id="word"></div>
+  <div class="word-hint" id="wordHint"></div>
+</div>
+
+<div class="info">
+  <div id="streak">Правильних наголосів підряд: 0</div>
+  <div id="mistakes">Кількість помилок: 0/3</div>
+  <div id="record">До рекорду залишилось: 0</div>
+</div>
+
+<div class="buttons">
+  <button class="btn" id="stats">Статистика</button>
+  <button class="btn" id="restart">Почати заново</button>
+  <button class="btn" id="next" style="display:none;">Наступне слово</button>
+</div>
+
+<div class="modal" id="statsModal">
+  <div class="modal-content">
+    <h2>Статистика</h2>
+    <div id="statsContent"></div>
+    <button class="btn" onclick="closeStats()">Закрити</button>
+  </div>
+</div>
+
+<script>
+const wordsWithStress = [
+  "агронОмія", "алфАвІт", "Аркушик", "асиметрІя",
+  "багаторазОвий", "безпринцИпний", "бЕшкет", "блАговіст",
+  "близькИй", "болотИстий", "борОдавка", "босОніж", "боЯзнь",
+  "бурштинОвий", "бюлетЕнь", "вАги(у множині)", "вантажІвка",
+  "веснЯнИй", "вИгода(користь)", "вигОда(зручність)",
+  "видАння", "визвОльний", "вимОга", "вИпадок", "вирАзний",
+  "вИсіти", "вИтрата", "вишИваний", "відвезтИ", "відвестИ",
+  "вІдгомін", "віднестИ", "вІдомість(список)", "відОмість(повідомлення, дані, популярність)",
+  "вІрші", "віршовИй", "вітчИм", "гальмО", "гАльма", "глядАч",
+  "горошИна", "граблІ", "гуртОжиток", "данИна", "дАно",
+  "децимЕтр", "дЕщиця", "де-Юре", "джерелО", "дИвлячись",
+  "дичАвіти", "діалОг", "добовИй", "добУток", "довезтИ",
+  "довестИ", "довІдник", "дОгмат", "донестИ", "дОнька",
+  "дочкА", "дрОва", "експЕрт", "єретИк", "жалюзІ",
+  "завдАння", "завезтИ", "завестИ", "зАвжди", "завчасУ",
+  "зАгадка", "заіржАвілий", "заіржАвіти", "закінчИти", "зАкладка(у книзі)",
+  "зАкрутка", "залишИти", "замІжня", "занестИ", "зАпонка",
+  "заробІток", "зАставка", "зАстібка", "застОпорити", "звИсока",
+  "здАлека", "зібрАння", "зобразИти", "зОзла", "зрАння",
+  "зрУчний", "зубОжіння", "індУстрія", "кАмбала", "каталОг",
+  "квартАл", "кИшка", "кіломЕтр", "кінчИти", "кОлесо",
+  "кОлія", "кОпчений(дієприкметник)", "копчЕний(прикметник)", "корИсний",
+  "кОсий", "котрИй", "крицЕвий", "крОїти", "кропивА",
+  "кулінАрія", "кУрятина", "лАте", "листопАд", "літОпис",
+  "лЮстро", "мАбУть", "магістЕрський", "мАркетинг", "мерЕжа",
+  "металУргія", "мілімЕтр", "навчАння", "нанестИ", "напІй",
+  "нАскрізний", "нАчинка", "ненАвидіти", "ненАвисний", "ненАвисть",
+  "нестИ", "нІздря", "новИй", "обіцЯнка", "обрАння",
+  "обрУч(іменник)", "одинАдцять", "одноразОвий", "ознАка", "Олень",
+  "оптОвий", "осетЕр", "отАман", "Оцет", "павИч",
+  "партЕр", "пЕкарський", "перевезтИ", "перевестИ", "перЕкис",
+  "перелЯк", "перенестИ", "перЕпад", "перЕпис", "піалА",
+  "пІдданий(дієприкметник)", "піддАний(іменник, істота)", "пІдлітковий", "пізнАння", "пітнИй",
+  "піцЕрія", "пОдруга", "пОзначка", "пОмИлка", "помІщик",
+  "помОвчати", "понЯття", "порядкОвий", "посерЕдині", "привезтИ",
+  "привестИ", "прИморозок", "принестИ", "прИчіп", "прОділ",
+  "промІжок", "псевдонІм", "рАзом", "рЕмінь(пояс)", "рЕшето",
+  "рИнковий", "рівнИна", "роздрібнИй", "рОзпірка", "рукОпис",
+  "руслО", "сантимЕтр", "свЕрдло", "серЕдина", "сЕча",
+  "симетрІя", "сільськогосподАрський", "сімдесЯт", "слИна", "соломИнка",
+  "стАтуя", "стовідсОтковий", "стрибАти", "текстовИй", "течіЯ",
+  "тИгровий", "тисОвий", "тім'янИй", "травестІя", "тризУб",
+  "тУлуб", "украЇнський", "уподОбання", "урочИстий", "усерЕдині",
+  "фартУх", "фаховИй", "фенОмен", "фОльга", "фОрзац",
+  "хАос(у міфології: стихія)", "хаОс(безлад)", "цАрина", "цемЕнт", "цЕнтнер",
+  "ціннИк", "чарівнИй", "черговИй", "читАння", "чорнОзем",
+  "чорнОслив", "чотирнАдцять", "шляхопровІд", "шовкОвий", "шофЕр",
+  "щЕлепа", "щИпці", "щодобовИй", "ярмаркОвий"
+];
+
+const vowels = new Set(['а', 'е', 'є', 'и', 'і', 'ї', 'о', 'у', 'ю', 'я']);
+const doubleStressWords = new Set([
+  "пОмИлка",
+  "мАбУть",
+  "веснЯнИй",
+  "алфАвІт"
+]);
+
+// Load saved progress
+let savedData = JSON.parse(localStorage.getItem('accentGameData')) || {};
+let availableWords = [...wordsWithStress];
+let usedWords = [];
+let mistakeWords = savedData.mistakeWords || {};
+let streak = savedData.streak || 0;
+let bestStreak = savedData.bestStreak || 0;
+let mistakes = savedData.mistakes || 0;
+let totalCorrect = savedData.totalCorrect || 0;
+let totalMistakes = savedData.totalMistakes || 0;
+let currentWord = '';
+let stressedIndices = [];
+let selectedCount = 0;
+let requiredSelections = 1;
+
+function saveProgress() {
+  const gameData = {
+    mistakeWords,
+    streak,
+    bestStreak,
+    mistakes,
+    totalCorrect,
+    totalMistakes,
+    theme: document.body.classList.contains('day') ? 'day' : 'night'
+  };
+  localStorage.setItem('accentGameData', JSON.stringify(gameData));
+}
+
+function chooseWord() {
+  if (availableWords.length === 0) {
+    alert("Всі слова використані! Починаємо нову гру.");
+    restartGame();
+    return;
+  }
+  
+  const wordRaw = availableWords.splice(Math.floor(Math.random() * availableWords.length), 1)[0];
+  usedWords.push(wordRaw);
+  
+  // Extract note if present
+  const noteMatch = wordRaw.match(/\(([^)]+)\)/);
+  const note = noteMatch ? noteMatch[1] : '';
+  currentWord = wordRaw.replace(/\([^)]+\)/, '').toLowerCase();
+  
+  // Find stress positions (uppercase letters)
+  const wordWithStress = wordRaw.replace(/\([^)]+\)/, '');
+  stressedIndices = [...wordWithStress]
+    .map((c, i) => c === c.toUpperCase() && /[А-ЯІЇЄҐ]/.test(c) ? i : -1)
+    .filter(i => i !== -1);
+  
+  // Check if this is a word requiring two stresses
+  requiredSelections = doubleStressWords.has(wordWithStress) ? 2 : 1;
+  
+  displayWord(note);
+}
+
+function displayWord(note = '') {
+  const container = document.getElementById('word');
+  const noteElement = document.getElementById('wordNote');
+  const hintElement = document.getElementById('wordHint');
+  
+  container.classList.remove('show');
+  noteElement.textContent = note;
+  hintElement.textContent = requiredSelections === 2 ? "Оберіть два наголоси" : "";
+  
+  selectedCount = 0;
+  
+  setTimeout(() => {
+    container.innerHTML = '';
+    [...currentWord].forEach((letter, index) => {
+      const span = document.createElement('span');
+      span.className = 'letter';
+      span.textContent = letter;
+      
+      if (vowels.has(letter.toLowerCase())) {
+        span.classList.add('vowel');
+        span.onclick = () => handleChoice(index, span);
+      } else {
+        span.classList.add('non-vowel');
+      }
+      
+      container.appendChild(span);
+    });
+    setTimeout(() => container.classList.add('show'), 50);
+  }, 200);
+  
+  document.getElementById('next').style.display = 'none';
+}
+
+function handleChoice(index, span) {
+  const letters = document.querySelectorAll('.letter');
+  
+  if (span.classList.contains('correct') || span.classList.contains('wrong')) {
+    return; // Already selected this letter
+  }
+
+  if (stressedIndices.includes(index)) {
+    span.classList.add('correct');
+    selectedCount++;
+    
+    if (selectedCount === requiredSelections) {
+      letters.forEach(l => {
+        if (vowels.has(l.textContent.toLowerCase())) {
+          l.onclick = null;
+        }
+      });
+      
+      streak++;
+      totalCorrect++;
+      
+      if (streak > bestStreak) {
+        bestStreak = streak;
+      }
+    }
+  } else {
+    span.classList.add('wrong');
+    stressedIndices.forEach(i => letters[i].classList.add('correct'));
+    letters.forEach(l => {
+      if (vowels.has(l.textContent.toLowerCase())) {
+        l.onclick = null;
+      }
+    });
+    streak = 0;
+    mistakes++;
+    totalMistakes++;
+    mistakeWords[currentWord] = (mistakeWords[currentWord] || 0) + 1;
+  }
+
+  updateInfo();
+  saveProgress();
+
+  if (mistakes >= 3) {
+    setTimeout(() => {
+      alert('Гру закінчено. Ви допустили 3 помилки.');
+      restartGame();
+    }, 500);
+  } else if (selectedCount === requiredSelections || span.classList.contains('wrong')) {
+    document.getElementById('next').style.display = 'inline-block';
+  }
+}
+
+function updateInfo() {
+  document.getElementById('streak').textContent = `Правильних наголосів підряд: ${streak}`;
+  document.getElementById('mistakes').textContent = `Кількість помилок: ${mistakes}/3`;
+  const toBeat = bestStreak > streak ? bestStreak - streak : 0;
+  document.getElementById('record').textContent = toBeat > 0 ? `До рекорду залишилось: ${toBeat}` : `Новий рекорд!`;
+}
+
+function restartGame() {
+  streak = 0;
+  mistakes = 0;
+  availableWords = [...wordsWithStress];
+  usedWords = [];
+  updateInfo();
+  saveProgress();
+  chooseWord();
+}
+
+function openStats() {
+  const stats = document.getElementById('statsContent');
+  stats.innerHTML = `
+    <p>Усього правильних відповідей: ${totalCorrect}</p>
+    <p>Усього помилок: ${totalMistakes}</p>
+    <p>Найкраща серія: ${bestStreak}</p>
+    <h3>Найпроблемніші слова:</h3>
+    <ul>
+      ${Object.entries(mistakeWords).sort((a,b) => b[1]-a[1]).slice(0, 10).map(([word, count]) => `<li>${word}: ${count} помилок</li>`).join('')}
+    </ul>
+  `;
+  document.getElementById('statsModal').classList.add('show');
+}
+
+function closeStats() {
+  document.getElementById('statsModal').classList.remove('show');
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('day');
+  const theme = document.body.classList.contains('day') ? 'day' : 'night';
+  document.getElementById('themeToggle').textContent = theme === 'day' ? '☀️' : '🌙';
+  saveProgress();
+}
+
+document.getElementById('themeToggle').onclick = toggleTheme;
+document.getElementById('next').onclick = chooseWord;
+document.getElementById('restart').onclick = restartGame;
+document.getElementById('stats').onclick = openStats;
+
+// Initialize theme from saved preferences
+if (savedData.theme === 'day') {
+  document.body.classList.add('day');
+  document.getElementById('themeToggle').textContent = '☀️';
+} else {
+  document.body.classList.remove('day');
+  document.getElementById('themeToggle').textContent = '🌙';
+}
+
+chooseWord();
+</script>
+</body>
+</html>
